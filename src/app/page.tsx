@@ -1,103 +1,230 @@
-import Image from "next/image";
+'use client'
 
-export default function Home() {
+import { useState, useEffect, useCallback } from 'react'
+import { Navbar } from '@/components/layout/Navbar'
+import { SearchBar } from '@/components/features/SearchBar'
+import { UserCard } from '@/components/features/UserCard'
+import { Pagination } from '@/components/ui/Pagination'
+import { useAuth } from '@/contexts/AuthContext'
+import { apiClient } from '@/lib/api-client'
+import { SKILL_CATEGORIES, AVAILABILITY_OPTIONS } from '@/lib/constants'
+import type { UsersResponse, SearchFilters, PublicUser } from '@/types'
+import { Loader2, AlertCircle, Users } from 'lucide-react'
+
+export default function HomePage() {
+  const { user, logout, isLoggedIn } = useAuth()
+  const [users, setUsers] = useState<PublicUser[]>([])
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalCount: 0,
+    hasNext: false,
+    hasPrev: false,
+  })
+  const [filters, setFilters] = useState<Partial<SearchFilters>>({
+    page: 1,
+    limit: 10,
+  })
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [showLoginModal, setShowLoginModal] = useState(false)
+
+  // Fetch users data
+  const fetchUsers = useCallback(async (searchFilters: Partial<SearchFilters>) => {
+    try {
+      setIsLoading(true)
+      setError(null)
+      
+      const response = await apiClient.get<{ success: boolean; data: UsersResponse }>('/api/users', searchFilters)
+      
+      if (response.success && response.data) {
+        setUsers(response.data.users)
+        setPagination(response.data.pagination)
+      } else {
+        throw new Error('Failed to fetch users')
+      }
+    } catch (err) {
+      console.error('Error fetching users:', err)
+      // Don't show error for unauthorized - this endpoint should be public
+      if (err instanceof Error && err.message.toLowerCase().includes('unauthorized')) {
+        // Just show empty state instead of error
+        setUsers([])
+        setPagination({
+          currentPage: 1,
+          totalPages: 1,
+          totalCount: 0,
+          hasNext: false,
+          hasPrev: false,
+        })
+      } else {
+        setError(err instanceof Error ? err.message : 'An error occurred while fetching users')
+      }
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  // Initial load
+  useEffect(() => {
+    fetchUsers(filters)
+  }, [fetchUsers, filters])
+
+  // Handle search
+  const handleSearch = useCallback((newFilters: Partial<SearchFilters>) => {
+    // Check if this is an explicit clear (all undefined values)
+    const isClearOperation = Object.values(newFilters).every(value => 
+      value === undefined || value === 1 // page is always 1
+    )
+    
+    if (isClearOperation) {
+      setFilters({ page: 1, limit: 10 })
+      return
+    }
+    
+    // Clean up undefined values before setting filters
+    const cleanedFilters = Object.fromEntries(
+      Object.entries(newFilters).filter(([_, value]) => value !== undefined && value !== '')
+    )
+    
+    const updatedFilters = { ...filters, ...cleanedFilters }
+    setFilters(updatedFilters)
+  }, [filters])
+
+  // Handle pagination
+  const handlePageChange = useCallback((page: number) => {
+    setFilters(prev => ({ ...prev, page }))
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [])
+
+  // Handle request click
+  const handleRequestClick = useCallback((userId: string) => {
+    if (!isLoggedIn) {
+      setShowLoginModal(true)
+      return
+    }
+    
+    // TODO: Navigate to request swap page
+    console.log('Request swap for user:', userId)
+  }, [isLoggedIn])
+
+  // Handle login modal close
+  const handleCloseLoginModal = () => {
+    setShowLoginModal(false)
+  }
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="min-h-screen bg-gray-50">
+      {/* Navigation */}
+      <Navbar user={user} onLogout={logout} />
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Search & Filters */}
+        <SearchBar 
+          filters={filters}
+          onSearch={handleSearch}
+          categories={SKILL_CATEGORIES}
+          availabilityOptions={AVAILABILITY_OPTIONS}
+        />
+
+        {/* Results Section */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold text-gray-900">
+              Discover Skills & Connect
+            </h1>
+            {!isLoading && (
+              <div className="flex items-center text-sm text-gray-600">
+                <Users className="h-4 w-4 mr-1" />
+                <span>{pagination.totalCount} users found</span>
+              </div>
+            )}
+          </div>
+          <p className="text-gray-600 mt-1">
+            Find people with the skills you need and share your expertise
+          </p>
         </div>
+
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
+            <span className="ml-2 text-gray-600">Loading...</span>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center">
+              <AlertCircle className="h-5 w-5 text-red-600 mr-2" />
+              <p className="text-red-800">{error}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Users List */}
+        {!isLoading && !error && (
+          <>
+            {users.length > 0 ? (
+              <div className="space-y-4 mb-8">
+                {users.map((userData) => (
+                  <UserCard
+                    key={userData.id}
+                    user={userData}
+                    isLoggedIn={isLoggedIn}
+                    onRequestClick={handleRequestClick}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No users found</h3>
+                <p className="text-gray-600">
+                  Try adjusting your search filters or check back later for new members.
+                </p>
+              </div>
+            )}
+
+            {/* Pagination */}
+            {pagination.totalPages > 1 && (
+              <Pagination
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                onPageChange={handlePageChange}
+                className="mt-8"
+              />
+            )}
+          </>
+        )}
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+      {/* Login Modal */}
+      {showLoginModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Login Required</h3>
+            <p className="text-gray-600 mb-6">
+              You need to be logged in to request skill swaps. Please login or create an account to continue.
+            </p>
+            <div className="flex space-x-3">
+              <button
+                onClick={handleCloseLoginModal}
+                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+              >
+                Cancel
+              </button>
+              <a
+                href="/auth/login"
+                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-md hover:bg-teal-700 transition-colors text-center"
+              >
+                Login
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-  );
+  )
 }

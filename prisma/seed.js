@@ -23,6 +23,7 @@ const initialSkills = [
   { name: 'PowerPoint', category: 'Office' },
   { name: 'Word', category: 'Office' },
   { name: 'Data Analysis', category: 'Office' },
+  { name: 'Tableau', category: 'Office' },
   
   // Languages
   { name: 'English', category: 'Language' },
@@ -41,6 +42,11 @@ const initialSkills = [
   { name: 'Marketing', category: 'Business' },
   { name: 'Sales', category: 'Business' },
   { name: 'Accounting', category: 'Business' },
+  { name: 'Social Media', category: 'Business' },
+  
+  // Technology Skills (Additional)
+  { name: 'Machine Learning', category: 'Programming' },
+  { name: 'Data Science', category: 'Programming' },
 ]
 
 async function main() {

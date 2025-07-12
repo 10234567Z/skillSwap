@@ -4,14 +4,18 @@ import { getUserFromRequest } from '@/lib/auth'
 export function middleware(request: NextRequest) {
   // Check if the request is for API routes that require authentication
   if (request.nextUrl.pathname.startsWith('/api/')) {
-    // Skip auth check for login and register endpoints
-    const publicEndpoints = ['/api/auth/login', '/api/auth/register']
+    // Public endpoints that don't require authentication
+    const publicEndpoints = [
+      '/api/auth/login', 
+      '/api/auth/register',
+      '/api/users' // Public profiles can be viewed by anyone
+    ]
     
     if (publicEndpoints.some(endpoint => request.nextUrl.pathname.startsWith(endpoint))) {
       return NextResponse.next()
     }
     
-    // Check for authentication
+    // Check for authentication for protected endpoints
     const user = getUserFromRequest(request)
     if (!user) {
       return NextResponse.json(
