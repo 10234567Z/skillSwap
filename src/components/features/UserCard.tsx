@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
 import { MapPin, Star, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import type { UserCardProps } from '@/types'
@@ -30,21 +31,23 @@ export function UserCard({ user, isLoggedIn, onRequestClick }: UserCardProps) {
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
         {/* Profile Photo */}
         <div className="flex-shrink-0 self-center sm:self-start">
-          {user.profilePhoto ? (
-            <Image
-              src={user.profilePhoto}
-              alt={user.name}
-              width={80}
-              height={80}
-              className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover"
-            />
-          ) : (
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-300 flex items-center justify-center">
-              <span className="text-xl sm:text-2xl font-semibold text-gray-600">
-                {user.name.charAt(0).toUpperCase()}
-              </span>
-            </div>
-          )}
+          <Link href={`/profile/${user.id}`} className="block">
+            {user.profilePhoto ? (
+              <Image
+                src={user.profilePhoto}
+                alt={user.name}
+                width={80}
+                height={80}
+                className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover hover:ring-2 hover:ring-teal-500 transition-all cursor-pointer"
+              />
+            ) : (
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-300 flex items-center justify-center hover:ring-2 hover:ring-teal-500 transition-all cursor-pointer">
+                <span className="text-xl sm:text-2xl font-semibold text-gray-600">
+                  {user.name.charAt(0).toUpperCase()}
+                </span>
+              </div>
+            )}
+          </Link>
         </div>
 
         {/* User Info & Skills */}

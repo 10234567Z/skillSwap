@@ -62,6 +62,35 @@ export interface SwapRequest {
   completedAt?: string
 }
 
+export interface SwapRequestWithDetails extends SwapRequest {
+  sender: {
+    id: string
+    name: string
+    location?: string
+    profilePhoto?: string
+    averageRating: number
+    totalRatings: number
+  }
+  receiver: {
+    id: string
+    name: string
+    location?: string
+    profilePhoto?: string
+    averageRating: number
+    totalRatings: number
+  }
+  senderSkill: {
+    id: string
+    name: string
+    category?: string
+  }
+  receiverSkill: {
+    id: string
+    name: string
+    category?: string
+  }
+}
+
 // Search & Filter Types
 export interface SearchFilters {
   search?: string

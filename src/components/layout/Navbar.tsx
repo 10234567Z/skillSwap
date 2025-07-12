@@ -6,7 +6,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { APP_CONFIG } from '@/lib/constants'
 import type { NavbarProps } from '@/types'
-import { User, LogOut, Home, FileText } from 'lucide-react'
+import { User, LogOut, Home, ArrowRightLeft } from 'lucide-react'
 
 export function Navbar({ user, onLogout }: NavbarProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
@@ -43,7 +43,7 @@ export function Navbar({ user, onLogout }: NavbarProps) {
                   href={APP_CONFIG.routes.swapRequests}
                   className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
                 >
-                  <FileText className="h-4 w-4" />
+                  <ArrowRightLeft className="h-4 w-4" />
                   <span>Swap Requests</span>
                 </Link>
 

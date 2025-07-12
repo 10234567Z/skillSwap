@@ -33,7 +33,7 @@ export const APP_CONFIG = {
     login: '/auth/login',
     register: '/auth/register',
     profile: '/profile',
-    swapRequests: '/swap-requests',
+    swapRequests: '/requests',
     userProfile: (id: string) => `/profile/${id}`,
   }
 } as const
