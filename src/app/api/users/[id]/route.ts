@@ -67,7 +67,7 @@ export async function GET(
     const skillsOffered = user.userSkills
       .filter(us => us.type === 'OFFERED')
       .map(us => ({
-        id: us.skill.id,
+        id: us.id, // Use UserSkill ID, not Skill ID
         name: us.skill.name,
         category: us.skill.category || undefined,
         level: us.level
@@ -76,7 +76,7 @@ export async function GET(
     const skillsWanted = user.userSkills
       .filter(us => us.type === 'WANTED')
       .map(us => ({
-        id: us.skill.id,
+        id: us.id, // Use UserSkill ID, not Skill ID
         name: us.skill.name,
         category: us.skill.category || undefined,
         level: us.level

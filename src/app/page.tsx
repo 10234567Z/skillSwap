@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Navbar } from '@/components/layout/Navbar'
 import { SearchBar } from '@/components/features/SearchBar'
 import { UserCard } from '@/components/features/UserCard'
+import { RequestPopup } from '@/components/features/RequestPopup'
 import { Pagination } from '@/components/ui/Pagination'
 import { useAuth } from '@/contexts/AuthContext'
 import { apiClient } from '@/lib/api-client'
@@ -28,6 +29,8 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showLoginModal, setShowLoginModal] = useState(false)
+  const [showRequestPopup, setShowRequestPopup] = useState(false)
+  const [selectedUser, setSelectedUser] = useState<PublicUser | null>(null)
 
   // Fetch users data
   const fetchUsers = useCallback(async (searchFilters: Partial<SearchFilters>) => {
@@ -132,9 +135,13 @@ export default function HomePage() {
       return
     }
     
-    // TODO: Navigate to request swap page
-    console.log('Request swap for user:', userId)
-  }, [isLoggedIn])
+    // Find the selected user and show request popup
+    const targetUser = users.find(u => u.id === userId)
+    if (targetUser) {
+      setSelectedUser(targetUser)
+      setShowRequestPopup(true)
+    }
+  }, [isLoggedIn, users])
 
   // Handle login modal close
   const handleCloseLoginModal = () => {
@@ -253,6 +260,19 @@ export default function HomePage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Request Popup */}
+      {showRequestPopup && selectedUser && user && (
+        <RequestPopup
+          isOpen={showRequestPopup}
+          targetUser={selectedUser}
+          currentUserId={user.id}
+          onClose={() => {
+            setShowRequestPopup(false)
+            setSelectedUser(null)
+          }}
+        />
       )}
     </div>
   )

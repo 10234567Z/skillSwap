@@ -144,7 +144,7 @@ export async function GET(request: NextRequest) {
       const skillsOffered = user.userSkills
         .filter(us => us.type === 'OFFERED')
         .map(us => ({
-          id: us.skill.id,
+          id: us.id,
           name: us.skill.name,
           category: us.skill.category,
           level: us.level,
@@ -153,7 +153,7 @@ export async function GET(request: NextRequest) {
       const skillsWanted = user.userSkills
         .filter(us => us.type === 'WANTED')
         .map(us => ({
-          id: us.skill.id,
+          id: us.id,
           name: us.skill.name,
           category: us.skill.category,
           level: us.level,

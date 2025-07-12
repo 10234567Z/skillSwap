@@ -204,3 +204,120 @@ export async function GET(request: NextRequest) {
     )
   }
 }
+
+export async function POST(request: NextRequest) {
+  try {
+    const token = request.headers.get('authorization')?.replace('Bearer ', '')
+    
+    if (!token) {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+
+    const payload = verifyToken(token)
+    if (!payload) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid token' },
+        { status: 401 }
+      )
+    }
+
+    const { receiverId, senderSkillId, receiverSkillId, message } = await request.json()
+
+    // Validate required fields
+    if (!receiverId || !senderSkillId || !receiverSkillId) {
+      return NextResponse.json(
+        { success: false, error: 'Receiver ID, sender skill ID, and receiver skill ID are required' },
+        { status: 400 }
+      )
+    }
+
+    // Check if sender is not the same as receiver
+    if (payload.userId === receiverId) {
+      return NextResponse.json(
+        { success: false, error: 'You cannot send a request to yourself' },
+        { status: 400 }
+      )
+    }
+
+    // Verify that the sender skill belongs to the current user and is offered
+    const senderSkill = await prisma.userSkill.findFirst({
+      where: {
+        id: senderSkillId,
+        userId: payload.userId,
+        type: 'OFFERED'
+      }
+    })
+
+    if (!senderSkill) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid sender skill. You can only offer skills you have listed.' },
+        { status: 400 }
+      )
+    }
+
+    // Verify that the receiver skill belongs to the target user and is offered
+    const receiverSkill = await prisma.userSkill.findFirst({
+      where: {
+        id: receiverSkillId,
+        userId: receiverId,
+        type: 'OFFERED'
+      }
+    })
+
+    if (!receiverSkill) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid receiver skill. You can only request skills they have offered.' },
+        { status: 400 }
+      )
+    }
+
+    // Check if there's already a pending request with the same skills
+    const existingRequest = await prisma.swapRequest.findFirst({
+      where: {
+        senderId: payload.userId,
+        receiverId: receiverId,
+        senderSkillId: senderSkillId,
+        receiverSkillId: receiverSkillId,
+        status: 'PENDING'
+      }
+    })
+
+    if (existingRequest) {
+      return NextResponse.json(
+        { success: false, error: 'You already have a pending request for these skills' },
+        { status: 400 }
+      )
+    }
+
+    // Create the swap request
+    const swapRequest = await prisma.swapRequest.create({
+      data: {
+        senderId: payload.userId,
+        receiverId,
+        senderSkillId,
+        receiverSkillId,
+        message: message || null,
+        status: 'PENDING'
+      }
+    })
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        id: swapRequest.id,
+        status: swapRequest.status,
+        createdAt: swapRequest.createdAt.toISOString()
+      }
+    })
+
+  } catch (error) {
+    console.error('Error creating swap request:', error)
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}

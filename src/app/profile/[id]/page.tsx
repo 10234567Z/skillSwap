@@ -6,6 +6,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Navbar } from '@/components/layout/Navbar'
 import { Button } from '@/components/ui/Button'
+import { RequestPopup } from '@/components/features/RequestPopup'
 import { useAuth } from '@/contexts/AuthContext'
 import { apiClient } from '@/lib/api-client'
 import type { PublicUser } from '@/types'
@@ -29,6 +30,7 @@ export default function UserProfilePage() {
   const [user, setUser] = useState<PublicUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showRequestPopup, setShowRequestPopup] = useState(false)
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -60,8 +62,13 @@ export default function UserProfilePage() {
   }, [userId])
 
   const handleRequestClick = () => {
-    // TODO: Implement request functionality
-    console.log('Request button clicked for user:', userId)
+    if (!isLoggedIn) {
+      // Redirect to login if not authenticated
+      window.location.href = '/auth/login'
+      return
+    }
+    
+    setShowRequestPopup(true)
   }
 
   const getSkillLevelColor = (level: string) => {
@@ -276,6 +283,16 @@ export default function UserProfilePage() {
           </div>
         </div>
       </main>
+
+      {/* Request Popup */}
+      {showRequestPopup && user && currentUser && (
+        <RequestPopup
+          isOpen={showRequestPopup}
+          targetUser={user}
+          currentUserId={currentUser.id}
+          onClose={() => setShowRequestPopup(false)}
+        />
+      )}
     </div>
   )
 }
