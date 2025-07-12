@@ -6,7 +6,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { APP_CONFIG } from '@/lib/constants'
 import type { NavbarProps } from '@/types'
-import { User, LogOut, Home, ArrowRightLeft } from 'lucide-react'
+import { User, LogOut, Home, ArrowRightLeft, Shield } from 'lucide-react'
 
 export function Navbar({ user, onLogout }: NavbarProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
@@ -46,6 +46,17 @@ export function Navbar({ user, onLogout }: NavbarProps) {
                   <ArrowRightLeft className="h-4 w-4" />
                   <span>Swap Requests</span>
                 </Link>
+
+                {/* Admin Panel Link for Admin Users */}
+                {user.role === 'ADMIN' && (
+                  <Link
+                    href="/admin"
+                    className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-orange-300 hover:text-orange-100 hover:bg-orange-700 rounded-md transition-colors"
+                  >
+                    <Shield className="h-4 w-4" />
+                    <span>Admin Panel</span>
+                  </Link>
+                )}
 
                 {/* User Profile Dropdown */}
                 <div className="relative">

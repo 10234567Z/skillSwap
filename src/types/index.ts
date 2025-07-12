@@ -180,3 +180,31 @@ export interface RatingFormData {
   rating: number
   feedback?: string
 }
+
+// Admin Types
+export interface AdminStats {
+  totalUsers: number
+  activeUsers: number
+  totalSwaps: number
+  totalSkills: number
+  completedSwaps: number
+  pendingSwaps: number
+  pendingSkills: number
+}
+
+export interface UserActivityReport {
+  totalRegistrations: number
+  registrationsThisMonth: number
+  activeUsersLastWeek: number
+  topLocations: Array<{ location: string; count: number }>
+  registrationsByMonth: Array<{ month: string; count: number }>
+}
+
+export interface SwapReport {
+  totalRequests: number
+  completionRate: number
+  popularSkills: Array<{ skill: string; requests: number }>
+  swapsByStatus: Array<{ status: string; count: number }>
+  averageRating: number
+  swapsByMonth: Array<{ month: string; count: number }>
+}

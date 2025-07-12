@@ -5,6 +5,7 @@ import { Navbar } from '@/components/layout/Navbar'
 import { SearchBar } from '@/components/features/SearchBar'
 import { UserCard } from '@/components/features/UserCard'
 import { RequestPopup } from '@/components/features/RequestPopup'
+import { GlobalMessageBanner } from '@/components/features/GlobalMessageBanner'
 import { Pagination } from '@/components/ui/Pagination'
 import { useAuth } from '@/contexts/AuthContext'
 import { apiClient } from '@/lib/api-client'
@@ -155,6 +156,11 @@ export default function HomePage() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Global Messages */}
+        <div className="mb-6">
+          <GlobalMessageBanner />
+        </div>
+
         {/* Search & Filters */}
         <SearchBar 
           filters={filters}

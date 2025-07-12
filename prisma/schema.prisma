@@ -105,13 +105,16 @@ model Rating {
 }
 
 model AdminMessage {
-  id        String  @id @default(cuid())
+  id        String            @id @default(cuid())
   title     String
   content   String
+  type      MessageType       @default(INFO)
+  isActive  Boolean           @default(true)
   userId    String?
-  isGlobal  Boolean @default(false)
-  isRead    Boolean @default(false)
-  createdAt DateTime @default(now())
+  isGlobal  Boolean           @default(false)
+  isRead    Boolean           @default(false)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
 
   // Relations
   user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -143,4 +146,11 @@ enum SwapRequestStatus {
   REJECTED
   COMPLETED
   CANCELLED
+}
+
+enum MessageType {
+  INFO
+  WARNING
+  SUCCESS
+  ERROR
 }
