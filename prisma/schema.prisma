@@ -1,0 +1,146 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  location  String?
+  profilePhoto String?
+  isPublic  Boolean  @default(true)
+  availability String[] // e.g., ["weekends", "evenings"]
+  role      UserRole @default(USER)
+  isBanned  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  userSkills      UserSkill[]
+  
+  sentRequests    SwapRequest[] @relation("RequestSender")
+  receivedRequests SwapRequest[] @relation("RequestReceiver")
+  
+  givenRatings    Rating[] @relation("RatingGiver")
+  receivedRatings Rating[] @relation("RatingReceiver")
+  
+  adminMessages   AdminMessage[]
+
+  @@map("users")
+}
+
+model Skill {
+  id          String @id @default(cuid())
+  name        String @unique
+  category    String?
+  description String?
+  isApproved  Boolean @default(true)
+  createdAt   DateTime @default(now())
+
+  // Relations
+  userSkills UserSkill[]
+
+  @@map("skills")
+}
+
+model UserSkill {
+  id       String    @id @default(cuid())
+  userId   String
+  skillId  String
+  type     SkillType // OFFERED or WANTED
+  level    SkillLevel @default(BEGINNER)
+  description String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, skillId, type])
+  @@map("user_skills")
+}
+
+model SwapRequest {
+  id          String            @id @default(cuid())
+  senderId    String
+  receiverId  String
+  senderSkillId String
+  receiverSkillId String
+  message     String?
+  status      SwapRequestStatus @default(PENDING)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  completedAt DateTime?
+
+  // Relations
+  sender       User @relation("RequestSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver     User @relation("RequestReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  
+  rating       Rating?
+
+  @@map("swap_requests")
+}
+
+model Rating {
+  id            String @id @default(cuid())
+  swapRequestId String @unique
+  giverId       String
+  receiverId    String
+  rating        Int    @db.SmallInt
+  feedback      String?
+  createdAt     DateTime @default(now())
+
+  // Relations
+  swapRequest SwapRequest @relation(fields: [swapRequestId], references: [id], onDelete: Cascade)
+  giver       User        @relation("RatingGiver", fields: [giverId], references: [id], onDelete: Cascade)
+  receiver    User        @relation("RatingReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@map("ratings")
+}
+
+model AdminMessage {
+  id        String  @id @default(cuid())
+  title     String
+  content   String
+  userId    String?
+  isGlobal  Boolean @default(false)
+  isRead    Boolean @default(false)
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("admin_messages")
+}
+
+// Enums
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum SkillType {
+  OFFERED
+  WANTED
+}
+
+enum SkillLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+enum SwapRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  COMPLETED
+  CANCELLED
+}
