@@ -87,6 +87,17 @@ export default function HomePage() {
     fetchUsers(filters)
   }, [fetchUsers, filters])
 
+  // Polling for real-time updates every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!isLoading) {
+        fetchUsers(filters)
+      }
+    }, 30000) // 30 seconds
+
+    return () => clearInterval(interval)
+  }, [fetchUsers, filters, isLoading])
+
   // Handle search
   const handleSearch = useCallback((newFilters: Partial<SearchFilters>) => {
     // Check if this is an explicit clear (all undefined values)
@@ -101,7 +112,7 @@ export default function HomePage() {
     
     // Clean up undefined values before setting filters
     const cleanedFilters = Object.fromEntries(
-      Object.entries(newFilters).filter(([_, value]) => value !== undefined && value !== '')
+      Object.entries(newFilters).filter(([, value]) => value !== undefined && value !== '')
     )
     
     const updatedFilters = { ...filters, ...cleanedFilters }

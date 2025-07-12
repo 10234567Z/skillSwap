@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { ZodError } from 'zod'
+import { ZodError, type ZodIssue } from 'zod'
 
 export function handleError(error: unknown) {
   console.error('API Error:', error)
@@ -8,7 +8,7 @@ export function handleError(error: unknown) {
     return NextResponse.json(
       { 
         error: 'Validation failed', 
-        details: error.issues.map((e: any) => `${e.path.join('.')}: ${e.message}`)
+        details: error.issues.map((e: ZodIssue) => `${e.path.join('.')}: ${e.message}`)
       },
       { status: 400 }
     )
@@ -27,7 +27,7 @@ export function handleError(error: unknown) {
   )
 }
 
-export function successResponse(data: any, status = 200) {
+export function successResponse(data: unknown, status = 200) {
   return NextResponse.json({ success: true, data }, { status })
 }
 

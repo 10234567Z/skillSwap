@@ -5,7 +5,6 @@ import { Search } from 'lucide-react'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { Button } from '@/components/ui/Button'
-import { SKILL_CATEGORIES, AVAILABILITY_OPTIONS } from '@/lib/constants'
 import type { SearchBarProps } from '@/types'
 
 export function SearchBar({ filters, onSearch, categories, availabilityOptions }: SearchBarProps) {
@@ -64,8 +63,6 @@ export function SearchBar({ filters, onSearch, categories, availabilityOptions }
     value: opt,
     label: opt.charAt(0).toUpperCase() + opt.slice(1)
   }))
-
-  const hasActiveFilters = searchQuery || selectedCategory || selectedAvailability || selectedLocation
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md mb-6">

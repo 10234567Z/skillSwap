@@ -56,8 +56,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
           // Invalid token format
           localStorage.removeItem('token')
         }
-      } catch (error) {
-        // Error parsing token
+      } catch {
+        // Error parsing token - remove invalid token
         localStorage.removeItem('token')
       }
     }

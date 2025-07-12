@@ -1,6 +1,6 @@
 // API Client with error handling and caching
 class ApiClient {
-  private cache = new Map<string, { data: any; timestamp: number }>()
+  private cache = new Map<string, { data: unknown; timestamp: number }>()
   private readonly CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 
   private getAuthHeaders(): HeadersInit {
@@ -25,8 +25,8 @@ class ApiClient {
     return headers
   }
 
-  private getCacheKey(url: string, params?: any): string {
-    return `${url}?${new URLSearchParams(params).toString()}`
+  private getCacheKey(url: string, params?: Record<string, unknown>): string {
+    return `${url}?${new URLSearchParams(params as Record<string, string>).toString()}`
   }
 
   private isCacheValid(timestamp: number): boolean {
@@ -41,20 +41,21 @@ class ApiClient {
     return response.json()
   }
 
-  async get<T>(url: string, params?: any, useCache = true): Promise<T> {
+  async get<T>(url: string, params?: Record<string, unknown>, useCache = true): Promise<T> {
     const cacheKey = this.getCacheKey(url, params)
     
     // Check cache first
     if (useCache && this.cache.has(cacheKey)) {
       const cached = this.cache.get(cacheKey)!
       if (this.isCacheValid(cached.timestamp)) {
-        return cached.data
+        return cached.data as T
       }
       this.cache.delete(cacheKey)
     }
 
     // Filter out undefined and empty values from params
     const cleanParams = params ? Object.fromEntries(
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       Object.entries(params).filter(([_, value]) => 
         value !== undefined && value !== null && value !== ''
       ).map(([key, value]) => [key, String(value)])
@@ -79,7 +80,7 @@ class ApiClient {
     return data
   }
 
-  async post<T>(url: string, body?: any): Promise<T> {
+  async post<T>(url: string, body?: unknown): Promise<T> {
     const response = await fetch(url, {
       method: 'POST',
       headers: this.getAuthHeaders(),
@@ -89,7 +90,7 @@ class ApiClient {
     return this.handleResponse<T>(response)
   }
 
-  async put<T>(url: string, body?: any): Promise<T> {
+  async put<T>(url: string, body?: unknown): Promise<T> {
     const response = await fetch(url, {
       method: 'PUT',
       headers: this.getAuthHeaders(),

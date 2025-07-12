@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit
     
     // Build dynamic where clause for search
-    const whereConditions: any[] = [
+    const whereConditions: Record<string, unknown>[] = [
       { isPublic: true }, // Only public profiles
       { isBanned: false }, // Not banned users
     ]
@@ -61,10 +61,9 @@ export async function GET(request: NextRequest) {
         }
       })
     }
-    
-    // Add skill-based filtering if specified
+     // Add skill-based filtering if specified
     if (skillCategory || skillLevel) {
-      const skillFilterConditions: any[] = []
+      const skillFilterConditions: Record<string, unknown>[] = []
       
       if (skillCategory) {
         skillFilterConditions.push({
@@ -86,8 +85,8 @@ export async function GET(request: NextRequest) {
         }
       })
     }
-    
-    const whereClause: any = {
+
+    const whereClause: Record<string, unknown> = {
       AND: whereConditions
     }
     

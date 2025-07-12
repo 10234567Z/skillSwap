@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Navbar } from '@/components/layout/Navbar'
+import { Breadcrumb } from '@/components/ui/Breadcrumb'
 import { useAuth } from '@/contexts/AuthContext'
 import { apiClient } from '@/lib/api-client'
 import { AVAILABILITY_OPTIONS } from '@/lib/constants'
@@ -39,7 +40,6 @@ interface Skill {
 export default function ProfilePage() {
   const { user, logout, isLoggedIn } = useAuth()
   const router = useRouter()
-  const [profile, setProfile] = useState<UserProfile | null>(null)
   const [skills, setSkills] = useState<Skill[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -94,11 +94,10 @@ export default function ProfilePage() {
         const [profileResponse, skillsResponse] = await Promise.all([
           apiClient.get(`/api/profile`),
           apiClient.get('/api/skills')
-        ]) as [any, any]
+        ])
 
-        if (profileResponse.success && profileResponse.data) {
+        if (profileResponse && typeof profileResponse === 'object' && 'success' in profileResponse && profileResponse.success && 'data' in profileResponse && profileResponse.data) {
           const profileData = profileResponse.data as UserProfile
-          setProfile(profileData)
           setSkillsOffered(profileData.skillsOffered || [])
           setSkillsWanted(profileData.skillsWanted || [])
           setFormData({
@@ -110,7 +109,7 @@ export default function ProfilePage() {
           })
         }
 
-        if (skillsResponse.success && skillsResponse.data) {
+        if (skillsResponse && typeof skillsResponse === 'object' && 'success' in skillsResponse && skillsResponse.success && 'data' in skillsResponse && skillsResponse.data) {
           setSkills(skillsResponse.data as Skill[])
         }
       } catch (err) {
@@ -124,7 +123,7 @@ export default function ProfilePage() {
     fetchData()
   }, [user])
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: string | boolean | string[]) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -146,16 +145,13 @@ export default function ProfilePage() {
       setError(null)
       setSuccess(null)
 
-      const response = await apiClient.put('/api/profile', formData) as any
+      const response = await apiClient.put('/api/profile', formData)
 
-      if (response.success) {
+      if (response && typeof response === 'object' && 'success' in response && response.success) {
         setSuccess('Profile updated successfully!')
-        // Refresh profile data
-        if (response.data) {
-          setProfile(response.data as UserProfile)
-        }
+        // Profile data is updated via formData state
       } else {
-        throw new Error(response.error || 'Failed to update profile')
+        throw new Error('Failed to update profile')
       }
     } catch (err) {
       console.error('Error saving profile:', err)
@@ -173,10 +169,10 @@ export default function ProfilePage() {
         skillId: newSkillId,
         type: newSkillType,
         level: newSkillLevel
-      }) as any
+      })
 
-      if (response.success) {
-        const newSkill = response.data
+      if (response && typeof response === 'object' && 'success' in response && response.success && 'data' in response) {
+        const newSkill = response.data as { id: string; skillId: string; skillName: string; level: string }
         if (newSkillType === 'OFFERED') {
           setSkillsOffered(prev => [...prev, newSkill])
         } else {
@@ -196,9 +192,9 @@ export default function ProfilePage() {
 
   const removeSkill = async (userSkillId: string, type: 'OFFERED' | 'WANTED') => {
     try {
-      const response = await apiClient.delete(`/api/profile/skills/${userSkillId}`) as any
+      const response = await apiClient.delete(`/api/profile/skills/${userSkillId}`)
 
-      if (response.success) {
+      if (response && typeof response === 'object' && 'success' in response && response.success) {
         if (type === 'OFFERED') {
           setSkillsOffered(prev => prev.filter(s => s.id !== userSkillId))
         } else {
@@ -233,6 +229,8 @@ export default function ProfilePage() {
       <Navbar user={user} onLogout={logout} />
       
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Breadcrumb items={[{ label: 'Profile' }]} />
+        
         <div className="bg-white rounded-lg shadow-md p-6">
           {/* Header */}
           <div className="flex items-center mb-6">
@@ -359,7 +357,7 @@ export default function ProfilePage() {
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 text-gray-900"
                     >
                       <option value="">Select Skill</option>
-                      {skills.map((skill) => (
+                      {skills.map((skill: Skill) => (
                         <option key={skill.id} value={skill.id}>
                           {skill.name} ({skill.category})
                         </option>
