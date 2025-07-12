@@ -18,7 +18,7 @@ export const registerSchema = z.object({
 export const updateProfileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(50, 'Name too long'),
   location: z.string().optional(),
-  profilePhoto: z.string().url().optional(),
+  profilePhoto: z.string().url().optional().or(z.literal('')),
   isPublic: z.boolean(),
   availability: z.array(z.string()),
 })

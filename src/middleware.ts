@@ -7,7 +7,8 @@ export function middleware(request: NextRequest) {
     // Fully public endpoints that don't require authentication
     const publicEndpoints = [
       '/api/auth/login', 
-      '/api/auth/register'
+      '/api/auth/register',
+      '/api/skills'
     ]
     
     // Endpoints that are public but can use optional authentication
