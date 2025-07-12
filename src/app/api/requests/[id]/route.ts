@@ -90,3 +90,81 @@ export async function PUT(
     )
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const token = request.headers.get('authorization')?.replace('Bearer ', '')
+    
+    if (!token) {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+
+    const payload = verifyToken(token)
+    if (!payload) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid token' },
+        { status: 401 }
+      )
+    }
+
+    const { id: requestId } = await params
+
+    if (!requestId) {
+      return NextResponse.json(
+        { success: false, error: 'Request ID is required' },
+        { status: 400 }
+      )
+    }
+
+    // Find the request and verify the user is the sender
+    const existingRequest = await prisma.swapRequest.findUnique({
+      where: { id: requestId }
+    })
+
+    if (!existingRequest) {
+      return NextResponse.json(
+        { success: false, error: 'Request not found' },
+        { status: 404 }
+      )
+    }
+
+    // Only the sender can delete their own outgoing requests
+    if (existingRequest.senderId !== payload.userId) {
+      return NextResponse.json(
+        { success: false, error: 'You can only delete requests you sent' },
+        { status: 403 }
+      )
+    }
+
+    // Only allow deletion of pending requests
+    if (existingRequest.status !== 'PENDING') {
+      return NextResponse.json(
+        { success: false, error: 'You can only delete pending requests' },
+        { status: 400 }
+      )
+    }
+
+    // Delete the request
+    await prisma.swapRequest.delete({
+      where: { id: requestId }
+    })
+
+    return NextResponse.json({
+      success: true,
+      message: 'Request deleted successfully'
+    })
+
+  } catch (error) {
+    console.error('Error deleting swap request:', error)
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}

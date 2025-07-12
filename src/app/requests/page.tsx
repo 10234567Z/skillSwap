@@ -6,10 +6,11 @@ import { Navbar } from '@/components/layout/Navbar'
 import { Pagination } from '@/components/ui/Pagination'
 import { Select } from '@/components/ui/Select'
 import { Button } from '@/components/ui/Button'
+import { RatingForm } from '@/components/features/RatingForm'
 import { useAuth } from '@/contexts/AuthContext'
 import { apiClient } from '@/lib/api-client'
 import type { SwapRequestWithDetails, PaginationInfo } from '@/types'
-import { Loader2, AlertCircle, ArrowUpDown, Calendar, MessageSquare, Star, MapPin } from 'lucide-react'
+import { Loader2, AlertCircle, ArrowUpDown, Calendar, MessageSquare, Star, MapPin, Trash2 } from 'lucide-react'
 import Image from 'next/image'
 
 export default function RequestsPage() {
@@ -28,6 +29,7 @@ export default function RequestsPage() {
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [showRatingForm, setShowRatingForm] = useState<string | null>(null) // requestId
 
   const fetchRequests = useCallback(async (page: number = 1) => {
     if (!isLoggedIn || !user) return
@@ -124,6 +126,43 @@ export default function RequestsPage() {
     }
   }
 
+  const handleDeleteRequest = async (requestId: string) => {
+    try {
+      setActionLoading(requestId)
+      
+      const response = await apiClient.delete(`/api/requests/${requestId}`)
+      
+      if (response && typeof response === 'object' && 'success' in response && response.success) {
+        // Remove the request from local state immediately
+        setRequests(prevRequests => 
+          prevRequests.filter(request => request.id !== requestId)
+        )
+        
+        // Update pagination count
+        setPagination(prev => ({
+          ...prev,
+          totalCount: prev.totalCount - 1
+        }))
+        
+        // Show success message
+        setError(null)
+        setSuccessMessage('Request deleted successfully!')
+        
+        // Auto-hide success message after 3 seconds
+        setTimeout(() => {
+          setSuccessMessage(null)
+        }, 3000)
+      } else {
+        throw new Error('Failed to delete request')
+      }
+    } catch (err) {
+      console.error('Error deleting request:', err)
+      setError(err instanceof Error ? err.message : 'Failed to delete request')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'pending': return 'text-yellow-600 bg-yellow-50 border-yellow-200'
@@ -143,6 +182,27 @@ export default function RequestsPage() {
       hour: '2-digit',
       minute: '2-digit'
     })
+  }
+
+  const handleShowRatingForm = (requestId: string) => {
+    setShowRatingForm(requestId)
+  }
+
+  const handleRatingSuccess = () => {
+    setShowRatingForm(null)
+    setSuccessMessage('Rating submitted successfully!')
+    
+    // Auto-hide success message after 3 seconds
+    setTimeout(() => {
+      setSuccessMessage(null)
+    }, 3000)
+    
+    // Refresh requests to show updated data
+    fetchRequests(pagination.currentPage)
+  }
+
+  const handleRatingCancel = () => {
+    setShowRatingForm(null)
   }
 
   if (!isLoggedIn) {
@@ -264,9 +324,11 @@ export default function RequestsPage() {
                     request={request}
                     currentUserId={user?.id || ''}
                     onAction={handleRequestAction}
+                    onDelete={handleDeleteRequest}
                     actionLoading={actionLoading}
                     getStatusColor={getStatusColor}
                     formatDate={formatDate}
+                    onShowRatingForm={handleShowRatingForm}
                   />
                 ))}
               </div>
@@ -294,6 +356,30 @@ export default function RequestsPage() {
             )}
           </>
         )}
+
+        {/* Rating Form - Conditionally Rendered */}
+        {showRatingForm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+              {(() => {
+                const request = requests.find(r => r.id === showRatingForm)
+                if (!request) return null
+                
+                const isReceived = request.receiverId === user?.id
+                const otherUser = isReceived ? request.sender : request.receiver
+                
+                return (
+                  <RatingForm 
+                    swapRequestId={showRatingForm}
+                    otherUserName={otherUser.name}
+                    onSuccess={handleRatingSuccess}
+                    onCancel={handleRatingCancel}
+                  />
+                )
+              })()}
+            </div>
+          </div>
+        )}
       </main>
     </div>
   )
@@ -303,18 +389,22 @@ interface RequestCardProps {
   request: SwapRequestWithDetails
   currentUserId: string
   onAction: (requestId: string, action: 'accept' | 'reject') => void
+  onDelete: (requestId: string) => void
   actionLoading: string | null
   getStatusColor: (status: string) => string
   formatDate: (date: string) => string
+  onShowRatingForm: (requestId: string) => void
 }
 
 function RequestCard({ 
   request, 
   currentUserId, 
   onAction, 
+  onDelete,
   actionLoading, 
   getStatusColor, 
-  formatDate 
+  formatDate,
+  onShowRatingForm
 }: RequestCardProps) {
   const [isStatusChanged, setIsStatusChanged] = useState(false)
   const isReceived = request.receiverId === currentUserId
@@ -458,6 +548,61 @@ function RequestCard({
               >
                 Reject
               </Button>
+            </div>
+          )}
+
+          {/* Delete Button for Outgoing Pending Requests */}
+          {!isReceived && request.status === 'PENDING' && (
+            <div className="mt-4">
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => onDelete(request.id)}
+                disabled={actionLoading === request.id}
+                className="w-full sm:w-auto"
+              >
+                {actionLoading === request.id ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <Trash2 className="h-4 w-4 mr-2" />
+                )}
+                Delete Request
+              </Button>
+            </div>
+          )}
+
+          {/* Rating Button for Accepted/Completed Requests */}
+          {(request.status === 'ACCEPTED' || request.status === 'COMPLETED') && !request.rating && (
+            <div className="mt-4">
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => onShowRatingForm(request.id)}
+                className="w-full sm:w-auto"
+              >
+                <Star className="h-4 w-4 mr-2" />
+                Rate Experience
+              </Button>
+            </div>
+          )}
+
+          {/* Show Rating if Already Submitted */}
+          {request.rating && (
+            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                <span className="text-sm font-medium text-gray-900">
+                  Rating: {request.rating.rating}/5
+                </span>
+                <span className="text-xs text-gray-500">
+                  {formatDate(request.rating.createdAt)}
+                </span>
+              </div>
+              {request.rating.feedback && (
+                <p className="text-sm text-gray-700 italic">
+                  "{request.rating.feedback}"
+                </p>
+              )}
             </div>
           )}
         </div>

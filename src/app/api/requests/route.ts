@@ -88,7 +88,8 @@ export async function GET(request: NextRequest) {
               }
             }
           }
-        }
+        },
+        rating: true
       }
     })
 
@@ -175,7 +176,16 @@ export async function GET(request: NextRequest) {
             id: receiverUserSkill?.skill.id || '',
             name: receiverUserSkill?.skill.name || 'Unknown Skill',
             category: receiverUserSkill?.skill.category
-          }
+          },
+          rating: request.rating ? {
+            id: request.rating.id,
+            swapRequestId: request.rating.swapRequestId,
+            giverId: request.rating.giverId,
+            receiverId: request.rating.receiverId,
+            rating: request.rating.rating,
+            feedback: request.rating.feedback,
+            createdAt: request.rating.createdAt.toISOString()
+          } : undefined
         } as SwapRequestWithDetails
       })
     )

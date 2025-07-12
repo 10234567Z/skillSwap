@@ -89,6 +89,7 @@ export interface SwapRequestWithDetails extends SwapRequest {
     name: string
     category?: string
   }
+  rating?: Rating
 }
 
 // Search & Filter Types
@@ -162,4 +163,20 @@ export interface SearchBarProps {
 export interface NavbarProps {
   user?: AuthUser | null
   onLogout?: () => void
+}
+
+// Rating Types
+export interface Rating {
+  id: string
+  swapRequestId: string
+  giverId: string
+  receiverId: string
+  rating: number // 1-5 scale
+  feedback?: string
+  createdAt: string
+}
+
+export interface RatingFormData {
+  rating: number
+  feedback?: string
 }
