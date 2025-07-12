@@ -1,4 +1,7 @@
 Skill Swap Platform 
+
+
+
 Overview: 
 Develop a Skill Swap Platform — a mini application that enables users to list their skills and 
 request others in return 
@@ -15,6 +18,8 @@ Request & Accept Swaps:
 Ratings or feedback after a swap 
 The user is also able to delete the swap request if it is not accepted. 
 Admin Role 
+
+
 ● Reject inappropriate or spammy skill descriptions. 
 ● Ban users who violate platform policies. 
 ● Monitor pending, accepted, or cancelled swaps. 
