@@ -27,20 +27,20 @@ export function UserCard({ user, isLoggedIn, onRequestClick }: UserCardProps) {
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-lg transition-shadow duration-200">
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
         {/* Profile Photo */}
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0 self-center sm:self-start">
           {user.profilePhoto ? (
             <Image
               src={user.profilePhoto}
               alt={user.name}
               width={80}
               height={80}
-              className="w-20 h-20 rounded-full object-cover"
+              className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover"
             />
           ) : (
-            <div className="w-20 h-20 rounded-full bg-gray-300 flex items-center justify-center">
-              <span className="text-2xl font-semibold text-gray-600">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-300 flex items-center justify-center">
+              <span className="text-xl sm:text-2xl font-semibold text-gray-600">
                 {user.name.charAt(0).toUpperCase()}
               </span>
             </div>
@@ -48,15 +48,15 @@ export function UserCard({ user, isLoggedIn, onRequestClick }: UserCardProps) {
         </div>
 
         {/* User Info & Skills */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between mb-3">
-            <div>
-              <h3 className={`text-xl font-semibold ${nameColor} truncate`}>
+        <div className="flex-1 min-w-0 w-full">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-3 gap-3">
+            <div className="flex-1">
+              <h3 className={`text-lg sm:text-xl font-semibold ${nameColor} text-center sm:text-left`}>
                 {user.name}
               </h3>
               
               {user.location && (
-                <div className="flex items-center text-sm text-gray-600 mt-1">
+                <div className="flex items-center justify-center sm:justify-start text-sm text-gray-600 mt-1">
                   <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
                   <span className="truncate">{user.location}</span>
                 </div>
@@ -64,9 +64,9 @@ export function UserCard({ user, isLoggedIn, onRequestClick }: UserCardProps) {
             </div>
 
             {/* Rating & Request Button */}
-            <div className="flex items-center gap-4 flex-shrink-0">
-              <div className="text-right">
-                <div className="flex items-center justify-end mb-1">
+            <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 flex-shrink-0">
+              <div className="text-center sm:text-right">
+                <div className="flex items-center justify-center sm:justify-end mb-1">
                   <Star className="h-4 w-4 text-yellow-400 fill-current mr-1" />
                   <span className="text-sm font-medium text-gray-700">
                     {user.averageRating > 0 ? `${user.averageRating}/5` : 'No rating'}
@@ -84,7 +84,7 @@ export function UserCard({ user, isLoggedIn, onRequestClick }: UserCardProps) {
                 size="sm"
                 onClick={handleRequestClick}
                 disabled={!isLoggedIn}
-                className="px-6"
+                className="px-4 sm:px-6 w-full sm:w-auto"
               >
                 {isLoggedIn ? 'Request' : 'Login to Request'}
               </Button>
@@ -92,11 +92,11 @@ export function UserCard({ user, isLoggedIn, onRequestClick }: UserCardProps) {
           </div>
 
           {/* Skills Row */}
-          <div className="flex flex-wrap gap-3 items-center">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3 items-start sm:items-center">
             {/* Skills Offered */}
             {user.skillsOffered.length > 0 && (
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-green-700">Skills Offered →</span>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
+                <span className="text-sm font-medium text-green-700 whitespace-nowrap">Skills Offered →</span>
                 <div className="flex flex-wrap gap-1">
                   {user.skillsOffered.slice(0, 3).map((skill) => (
                     <span
@@ -117,8 +117,8 @@ export function UserCard({ user, isLoggedIn, onRequestClick }: UserCardProps) {
 
             {/* Skills Wanted */}
             {user.skillsWanted.length > 0 && (
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-blue-700">Skills Wanted →</span>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
+                <span className="text-sm font-medium text-blue-700 whitespace-nowrap">Skills Wanted →</span>
                 <div className="flex flex-wrap gap-1">
                   {user.skillsWanted.slice(0, 3).map((skill) => (
                     <span
@@ -140,9 +140,9 @@ export function UserCard({ user, isLoggedIn, onRequestClick }: UserCardProps) {
 
           {/* Availability */}
           {user.availability.length > 0 && (
-            <div className="flex items-center text-sm text-gray-600 mt-2">
+            <div className="flex items-center justify-center sm:justify-start text-sm text-gray-600 mt-2">
               <Clock className="h-4 w-4 mr-1" />
-              <span>Available: {user.availability.join(', ')}</span>
+              <span className="text-center sm:text-left">Available: {user.availability.join(', ')}</span>
             </div>
           )}
         </div>
