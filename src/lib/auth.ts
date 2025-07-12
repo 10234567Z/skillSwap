@@ -18,8 +18,11 @@ export function generateToken(payload: { userId: string, email: string, role: st
 
 export function verifyToken(token: string): { userId: string, email: string, role: string } | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as { userId: string, email: string, role: string }
-  } catch {
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string, email: string, role: string }
+    console.log(`Auth: Token verified for user:`, decoded.userId, decoded.email)
+    return decoded
+  } catch (error) {
+    console.log(`Auth: Token verification failed:`, error)
     return null
   }
 }

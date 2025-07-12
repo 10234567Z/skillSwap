@@ -38,7 +38,25 @@ export default function HomePage() {
       const response = await apiClient.get<{ success: boolean; data: UsersResponse }>('/api/users', searchFilters)
       
       if (response.success && response.data) {
-        setUsers(response.data.users)
+        // Filter users for complete profiles and exclude current user
+        const currentUserId = user?.id
+        
+        const filteredUsers = response.data.users.filter(userData => {
+          // Check if profile is complete
+          const hasCompleteProfile = 
+            userData.name &&
+            userData.location &&
+            userData.availability && userData.availability.length > 0 &&
+            userData.skillsOffered && userData.skillsOffered.length > 0 &&
+            userData.skillsWanted && userData.skillsWanted.length > 0
+          
+          // Exclude current user (if logged in)
+          const isNotCurrentUser = !currentUserId || userData.id !== currentUserId
+          
+          return hasCompleteProfile && isNotCurrentUser
+        })
+        
+        setUsers(filteredUsers)
         setPagination(response.data.pagination)
       } else {
         throw new Error('Failed to fetch users')
@@ -62,7 +80,7 @@ export default function HomePage() {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [user]) // Add user as dependency so filtering works after context loads
 
   // Initial load
   useEffect(() => {

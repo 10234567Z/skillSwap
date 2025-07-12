@@ -106,6 +106,7 @@ export interface RegisterData {
   email: string
   password: string
   location?: string
+  availability?: string[]
 }
 
 // Component Props Types

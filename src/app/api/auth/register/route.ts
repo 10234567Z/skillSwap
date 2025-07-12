@@ -29,12 +29,14 @@ export async function POST(request: NextRequest) {
         password: hashedPassword,
         name: validatedData.name,
         location: validatedData.location,
+        availability: validatedData.availability || [],
       },
       select: {
         id: true,
         email: true,
         name: true,
         location: true,
+        availability: true,
         role: true,
         createdAt: true,
       }
